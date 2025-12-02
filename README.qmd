@@ -1,0 +1,90 @@
+
+
+
+```{r}
+library(duckdb)
+library(sf)
+library(tidyverse)
+```
+
+```{r}
+
+
+# Connect to DuckDB
+con <- dbConnect(duckdb())
+
+# Install and load spatial and httpfs extensions
+dbExecute(con, "INSTALL spatial; LOAD spatial;")
+dbExecute(con, "INSTALL httpfs; LOAD httpfs;")
+
+# Set S3 region for Overture Maps
+dbExecute(con, "SET s3_region='us-west-2';")
+
+# Define the query
+# 1. Use the specific Overture release (2025-11-19.0)
+# 2. Filter by UK Bounding Box (approximate)
+# 3. Filter for railways (subtype or class containing 'rail')
+# Note: 'read_parquet' efficiently reads the remote parquet files using the httpfs extension.
+query <- "
+SELECT
+  * EXCLUDE (geometry),
+  ST_AsWKB(geometry) AS geometry
+FROM read_parquet('s3://overturemaps-us-west-2/release/2025-11-19.0/theme=transportation/type=segment/*')
+WHERE
+  bbox.xmin > -14 AND bbox.xmax < 2 AND
+  bbox.ymin > 49 AND bbox.ymax < 61 AND
+  (
+    subtype LIKE '%rail%' OR
+    class LIKE '%rail%'
+  )
+"
+
+# Execute query and load directly into an sf object
+# st_read can read directly from the DuckDB connection
+uk_rail <- st_read(con, query = query, geometry_column = "geometry", quiet = TRUE)
+nrow(uk_rail)
+names(uk_rail)
+#  [1] "id"                     "bbox"                   "version"
+#  [4] "sources"                "subtype"                "class"
+#  [7] "names"                  "connectors"             "routes"
+# [10] "subclass_rules"         "access_restrictions"    "level_rules"
+# [13] "destinations"           "prohibited_transitions" "road_surface"
+# [16] "road_flags"             "speed_limits"           "width_rules"
+# [19] "subclass"               "rail_flags"             "theme"
+# [22] "type"                   "geometry"
+# Disconnect
+dbDisconnect(con)
+
+# Check the result
+print(uk_rail)
+
+uk_rail_minimal <- uk_rail |>
+  select(id, subtype, class, rail_flags) |>
+  mutate(rail_flags = paste(rail_flags, collapse = ";"))
+write_sf(uk_rail_minimal, "uk_railways_minimal.gpkg")
+```
+
+```{r}
+# 2011 MSOAs
+library(pct)
+zones <- pct::get_pct_zones("west-yorkshire")
+zones_leeds <- zones |>
+  filter(lad_name == "Leeds")
+leeds_boundary <- st_union(zones_leeds)
+sf::st_crs(uk_rail) <- 4326
+rail_leeds <- st_intersection(uk_rail, leeds_boundary)
+rail_leeds_minimal <- rail_leeds |>
+  select(id, subtype, class, rail_flags) |>
+  mutate(rail_flags = paste(rail_flags, collapse = ";")) |>
+  mutate(disused = str)
+sf::write_sf(rail_leeds_minimal, "leeds_railways_minimal.gpkg")
+```
+
+```{r}
+# Upload
+system("gh release create v1")
+system("gh release upload v1 leeds_railways_minimal.gpkg --clobber")
+```
+
+
+For further online resources, see [here](https://gemini.google.com/share/ca1b64cd049f).
