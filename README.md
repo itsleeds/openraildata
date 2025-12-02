@@ -1,26 +1,33 @@
----
-format: gfm
-title: "Extracting railway data for UK from OSM and Overture Maps"
-execute: 
-  eval: false
----
+# Extracting railway data for UK from OSM and Overture Maps
 
-The code below extracts railway data for the UK from OpenStreetMap (OSM) using the `osmextract` package, and also demonstrates how to use DuckDB to query railway data from Overture Maps. The extracted data is then filtered for specific regions such as Leeds and Yorkshire and the Humber, and saved as GeoPackage files.
 
-See the [releases page](https://github.com/itsleeds/openraildata/releases) for the resulting GeoPackage files.
+The code below extracts railway data for the UK from OpenStreetMap (OSM)
+using the `osmextract` package, and also demonstrates how to use DuckDB
+to query railway data from Overture Maps. The extracted data is then
+filtered for specific regions such as Leeds and Yorkshire and the
+Humber, and saved as GeoPackage files.
+
+See the [releases
+page](https://github.com/itsleeds/openraildata/releases) for the
+resulting GeoPackage files.
 
 Four main datasets are saved there:
 
-- `uk_railways_osm.gpkg`: All railways in the UK from OSM, available at [github.com/itsleeds/openraildata/releases/download/v1/uk_railways_osm.gpkg](https://github.com/itsleeds/openraildata/releases/download/v1/uk_railways_osm.gpkg)
-- `leeds_railways.gpkg`: Railways in Leeds from OSM, available at [github.com/itsleeds/openraildata/releases/download/v1/leeds_railways.gpkg](https://github.com/itsleeds/openraildata/releases/download/v1/leeds_railways.gpkg)
-- `rail_yorkshire_humber.gpkg`: Railways in Yorkshire and the Humber from OSM, available at [github.com/itsleeds/openraildata/releases/download/v1/rail_yorkshire_humber.gpkg](https://github.com/itsleeds/openraildata/releases/download/v1/rail_yorkshire_humber.gpkg)
-- `yorkshire_humber_abandoned_railways.gpkg`: Abandoned railways in Yorkshire and the Humber from OSM, available at [github.com/itsleeds/openraildata/releases/download/v1/yorkshire_humber_abandoned_railways.gpkg](https://github.com/itsleeds/openraildata/releases/download/v1/yorkshire_humber_abandoned_railways.gpkg)
+- `uk_railways_osm.gpkg`: All railways in the UK from OSM, available at
+  [github.com/itsleeds/openraildata/releases/download/v1/uk_railways_osm.gpkg](https://github.com/itsleeds/openraildata/releases/download/v1/uk_railways_osm.gpkg)
+- `leeds_railways.gpkg`: Railways in Leeds from OSM, available at
+  [github.com/itsleeds/openraildata/releases/download/v1/leeds_railways.gpkg](https://github.com/itsleeds/openraildata/releases/download/v1/leeds_railways.gpkg)
+- `rail_yorkshire_humber.gpkg`: Railways in Yorkshire and the Humber
+  from OSM, available at
+  [github.com/itsleeds/openraildata/releases/download/v1/rail_yorkshire_humber.gpkg](https://github.com/itsleeds/openraildata/releases/download/v1/rail_yorkshire_humber.gpkg)
+- `yorkshire_humber_abandoned_railways.gpkg`: Abandoned railways in
+  Yorkshire and the Humber from OSM, available at
+  [github.com/itsleeds/openraildata/releases/download/v1/yorkshire_humber_abandoned_railways.gpkg](https://github.com/itsleeds/openraildata/releases/download/v1/yorkshire_humber_abandoned_railways.gpkg)
 
-The following commands show how you can download and use the datasets in R:
+The following commands show how you can download and use the datasets in
+R:
 
-```{r}
-#| label: fig-abandoned-railways
-#| eval: true
+``` r
 library(tmap)
 url_abandoned_railways = "https://github.com/itsleeds/openraildata/releases/download/v1/yorkshire_humber_abandoned_railways.gpkg"
 abandoned_railways = sf::read_sf(url_abandoned_railways)
@@ -29,18 +36,30 @@ tm_shape(abandoned_railways) +
   tm_layout(title = "Abandoned railways in Yorkshire and the Humber")
 ```
 
-<details>summary>Click to expand code</summary>
+    [v3->v4] `tm_layout()`: use `tm_title()` instead of `tm_layout(title = )`
 
+<div id="fig-abandoned-railways">
 
-```{r}
+<img src="README_files/figure-commonmark/fig-abandoned-railways-1.png"
+id="fig-abandoned-railways" />
+
+Figure 1
+
+</div>
+
+<details>
+
+summary\>Click to expand code
+</summary>
+
+``` r
 library(duckdb)
 library(sf)
 library(tidyverse)
 library(pct)
 ```
 
-
-```{r}
+``` r
 # Get the dataset with osmextract package:
 library(osmextract)
 tic = Sys.time()
@@ -78,8 +97,7 @@ head(uk_rail_osm)
 sf::write_sf(uk_rail_osm, "uk_railways_osm.gpkg")
 ```
 
-
-```{r}
+``` r
 # 2011 MSOAs
 zones = pct::get_pct_zones("west-yorkshire")
 zones_leeds = zones |>
@@ -89,7 +107,7 @@ rail_leeds = st_intersection(uk_rail_osm, leeds_boundary)
 sf::write_sf(rail_leeds, "leeds_railways.gpkg")
 ```
 
-```{r}
+``` r
 # Get data for yorkshire and the humber:
 zones_soyo = pct::get_pct_zones("south-yorkshire")
 zones_noyo = pct::get_pct_zones("north-yorkshire")
@@ -108,7 +126,7 @@ rail_yorkshire_abandoned = rail_yorkshire_humber |>
 sf::write_sf(rail_yorkshire_abandoned, "yorkshire_humber_abandoned_railways.gpkg")
 ```
 
-```{r}
+``` r
 # Upload
 system("gh release create v1")
 system("gh release upload v1 leeds_railways.gpkg --clobber")
@@ -120,8 +138,7 @@ system("gh release upload v1 yorkshire_humber_abandoned_railways.gpkg --clobber"
 system("gh release upload v1 uk_railways_osm.gpkg --clobber")
 ```
 
-
-```{r}
+``` r
 # Connect to DuckDB (worked well but provided data in weird format, lots of list columns):
 con = dbConnect(duckdb())
 
@@ -179,7 +196,7 @@ uk_rail_minimal = uk_rail |>
 write_sf(uk_rail_minimal, "uk_railways_minimal.gpkg")
 ```
 
-```{r}
+``` r
 # Get the data with osmdata package (failed):
 library(osmdata)
 tic = Sys.time()
@@ -190,5 +207,5 @@ toc = Sys.time()
 print(toc - tic)
 ```
 
-
-For further online resources, see [here](https://gemini.google.com/share/ca1b64cd049f).
+For further online resources, see
+[here](https://gemini.google.com/share/ca1b64cd049f).
