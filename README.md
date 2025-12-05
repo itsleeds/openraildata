@@ -67,8 +67,8 @@ Relevant resources:
 - [OpenRailwayMap](https://www.openrailwaymap.org/) - Visualisation of
   global railway data based on OpenStreetMap.
 
-A map from the final link above is shown below, which shows the disused
-“Midland Railway” line from Hay to Hereford.
+A map from the UK OSGB 1888 Map Tiles is shown below, which shows the
+disused “Midland Railway” line from Hay to Hereford.
 
 ![](images/clipboard.png)
 
