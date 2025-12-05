@@ -55,17 +55,27 @@ Relevant resources:
 - [The Spatial Impacts of a Massive Rail Disinvestment Program: The
   Beeching Axe](http://cep.lse.ac.uk/pubs/download/dp1563.pdf) - Paper
   by Ted Pinchbeck and others.
+
 - [Historical Transport Infrastructure Dataset for Britain
   (1870-1937)](https://policycommons.net/artifacts/3159934/historical-infrastructure-dataset-pilot/3957822/) -
   Dataset commissioned by the National Infrastructure Commission.
+
 - [UK OSGB 1888 Map
   Tiles](https://cloud.maptiler.com/tiles/uk-osgb1888/) - Source for
   historic map data.
+
+- [OpenRailwayMap](https://www.openrailwaymap.org/) - Visualisation of
+  global railway data based on OpenStreetMap.
 
 A map from the final link above is shown below, which shows the disused
 “Midland Railway” line from Hay to Hereford.
 
 ![](images/clipboard.png)
+
+Below is a visualisation of open rail data from OSM on
+OpenRailwayMap.org:
+
+![](images/openrailwaymap.png)
 
 <details>
 
